@@ -1,2 +1,2 @@
 # dal-infrastructure-management-microsoft-teamwork
-TODO - add description
+This repository is dedicated to device adapter library used for providing details about a list of Microsoft Teams-enabled devices that are provisioned for the tenant.
