@@ -397,20 +397,6 @@ public class MicrosoftTeamworkAggregatorCommunicator extends RestCommunicator im
         }
     }
 
-    private void fetchPaginatedResponse(String uri, List<JsonNode> deviceNodes, int maxNumberOfDevices) throws Exception {
-        JsonNode response = doGet(uri, JsonNode.class);
-        String nextLink = response.at(NEXT_LINK_PATH).asText();
-        for (JsonNode value : response.at(VALUE_PATH)) {
-            if (deviceNodes.size() >= maxNumberOfDevices) {
-                break;
-            }
-            deviceNodes.add(value);
-        }
-        if (StringUtils.isNotNullOrEmpty(nextLink) && deviceNodes.size() < maxNumberOfDevices) {
-            fetchPaginatedResponse(nextLink, deviceNodes, maxNumberOfDevices);
-        }
-    }
-
     @Override
     protected <Response> Response doGet(String uri, Class<Response> responseClass) throws Exception {
         try {
@@ -555,6 +541,29 @@ public class MicrosoftTeamworkAggregatorCommunicator extends RestCommunicator im
                 .stream()
                 .filter(aggregatedDevice -> deviceIds.contains(aggregatedDevice.getDeviceId()))
                 .collect(toList());
+    }
+
+    /**
+     * Request urls with increased page number, until all the devices are retrieved, or target number of devices is reached
+     *
+     * @param uri to request data from
+     * @param deviceNodes collection to store json nodes to
+     * @param maxNumberOfDevices max number of devices
+     *
+     * @throws Exception if any error occurs
+     * */
+    private void fetchPaginatedResponse(String uri, List<JsonNode> deviceNodes, int maxNumberOfDevices) throws Exception {
+        JsonNode response = doGet(uri, JsonNode.class);
+        String nextLink = response.at(NEXT_LINK_PATH).asText();
+        for (JsonNode value : response.at(VALUE_PATH)) {
+            if (deviceNodes.size() >= maxNumberOfDevices) {
+                break;
+            }
+            deviceNodes.add(value);
+        }
+        if (StringUtils.isNotNullOrEmpty(nextLink) && deviceNodes.size() < maxNumberOfDevices) {
+            fetchPaginatedResponse(nextLink, deviceNodes, maxNumberOfDevices);
+        }
     }
 
     /**
@@ -705,17 +714,32 @@ public class MicrosoftTeamworkAggregatorCommunicator extends RestCommunicator im
         Map<String, String> properties = aggregatedDevice.getProperties();
         try {
             if (logger.isDebugEnabled()) {
-                logger.debug("Requesting device details for device with id: " + deviceId);
+                logger.debug("Requesting device activity details for device with id: " + deviceId);
             }
             JsonNode deviceActivity = doGet(String.format(RETRIEVE_DEVICES_ACTIVITY_URL, deviceId), JsonNode.class);
-            JsonNode deviceConfig = doGet(String.format(RETRIEVE_DEVICES_CONFIGURATION_URL, deviceId), JsonNode.class);
-            JsonNode deviceHealth = doGet(String.format(RETRIEVE_DEVICES_HEALTH_URL, deviceId), JsonNode.class);
-
             aggregatedDeviceProcessor.applyProperties(properties, deviceActivity, "DeviceActivity");
+        } catch (Exception ex) {
+            logger.error("Unable to retrieve device activity details for device with id: " + deviceId);
+        }
+
+        try {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Requesting device configuration details for device with id: " + deviceId);
+            }
+            JsonNode deviceConfig = doGet(String.format(RETRIEVE_DEVICES_CONFIGURATION_URL, deviceId), JsonNode.class);
             aggregatedDeviceProcessor.applyProperties(properties, deviceConfig, "DeviceConfiguration");
+        } catch (Exception ex) {
+            logger.error("Unable to retrieve device configuration details for device with id: " + deviceId);
+        }
+
+        try {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Requesting device health details for device with id: " + deviceId);
+            }
+            JsonNode deviceHealth = doGet(String.format(RETRIEVE_DEVICES_HEALTH_URL, deviceId), JsonNode.class);
             aggregatedDeviceProcessor.applyProperties(properties, deviceHealth, "DeviceHealth");
         } catch (Exception ex) {
-            logger.error("Unable to retrieve device details for device with id: " + deviceId);
+            logger.error("Unable to retrieve device health details for device with id: " + deviceId);
         }
     }
 
