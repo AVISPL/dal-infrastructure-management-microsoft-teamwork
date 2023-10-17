@@ -142,27 +142,27 @@ models:
         # Display health collection #
         # Display health collection #
         #
-        SoftwareHealth#CompanyPortalSoftwareFreshness: at("/softwareUpdateHealth/companyPortalSoftwareUpdateStatus/softwareFreshness")
+        SoftwareHealth#CompanyPortalSoftwareUpdateStatus: at("/softwareUpdateHealth/companyPortalSoftwareUpdateStatus/softwareFreshness")
         SoftwareHealth#CompanyPortalCurentVersion: at("/softwareUpdateHealth/companyPortalSoftwareUpdateStatus/currentVersion")
         SoftwareHealth#CompanyPortalAvailableVersion: at("/softwareUpdateHealth/companyPortalSoftwareUpdateStatus/availableVersion")
         #
-        SoftwareHealth#FirmwareSoftwareFreshness: at("/softwareUpdateHealth/firmwareSoftwareUpdateStatus/softwareFreshness")
+        SoftwareHealth#FirmwareSoftwareUpdateStatus: at("/softwareUpdateHealth/firmwareSoftwareUpdateStatus/softwareFreshness")
         SoftwareHealth#FirmwareCurentVersion: at("/softwareUpdateHealth/firmwareSoftwareUpdateStatus/currentVersion")
         SoftwareHealth#FirmwareAvailableVersion: at("/softwareUpdateHealth/firmwareSoftwareUpdateStatus/availableVersion")
         #
-        SoftwareHealth#PartnerAgentSoftwareFreshness: at("/softwareUpdateHealth/partnerAgentSoftwareUpdateStatus/softwareFreshness")
+        SoftwareHealth#PartnerAgentSoftwareUpdateStatus: at("/softwareUpdateHealth/partnerAgentSoftwareUpdateStatus/softwareFreshness")
         SoftwareHealth#PartnerAgentCurentVersion: at("/softwareUpdateHealth/partnerAgentSoftwareUpdateStatus/currentVersion")
         SoftwareHealth#PartnerAgentAvailableVersion: at("/softwareUpdateHealth/partnerAgentSoftwareUpdateStatus/availableVersion")
         #
-        SoftwareHealth#AdminAgentSoftwareFreshness: at("/softwareUpdateHealth/adminAgentSoftwareUpdateStatus/softwareFreshness")
+        SoftwareHealth#AdminAgentSoftwareUpdateStatus: at("/softwareUpdateHealth/adminAgentSoftwareUpdateStatus/softwareFreshness")
         SoftwareHealth#AdminAgentCurentVersion: at("/softwareUpdateHealth/adminAgentSoftwareUpdateStatus/currentVersion")
         SoftwareHealth#AdminAgentAvailableVersion: at("/softwareUpdateHealth/adminAgentSoftwareUpdateStatus/availableVersion")
         #
-        SoftwareHealth#TeamsClientSoftwareFreshness: at("/softwareUpdateHealth/teamsClientSoftwareUpdateStatus/softwareFreshness")
+        SoftwareHealth#TeamsClientSoftwareUpdateStatus: at("/softwareUpdateHealth/teamsClientSoftwareUpdateStatus/softwareFreshness")
         SoftwareHealth#TeamsClientCurentVersion: at("/softwareUpdateHealth/teamsClientSoftwareUpdateStatus/currentVersion")
         SoftwareHealth#TeamsClientAvailableVersion: at("/softwareUpdateHealth/teamsClientSoftwareUpdateStatus/availableVersion")
         #
-        SoftwareHealth#OperatingSystemSoftwareFreshness: at("/softwareUpdateHealth/operatingSystemSoftwareUpdateStatus/softwareFreshness")
+        SoftwareHealth#OperatingSystemSoftwareUpdateStatus: at("/softwareUpdateHealth/operatingSystemSoftwareUpdateStatus/softwareFreshness")
         SoftwareHealth#OperatingSystemCurentVersion: at("/softwareUpdateHealth/operatingSystemSoftwareUpdateStatus/currentVersion")
         SoftwareHealth#OperatingSystemAvailableVersion: at("/softwareUpdateHealth/operatingSystemSoftwareUpdateStatus/availableVersion")
         #
