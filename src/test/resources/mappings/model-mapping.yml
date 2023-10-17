@@ -1,0 +1,175 @@
+models:
+  - model:
+      name: Generic
+      vendor: Microsoft
+      filter: get("id") != null
+      mapping:
+        type: at("/deviceType")?.asText()
+        category: ""
+        serialNumber: at("/hardwareDetail/serialNumber")?.asText()
+        deviceId: at("/id")?.asText()
+        deviceName: at("/deviceType")?.asText() + " " + at("/hardwareDetail/serialNumber")?.asText()
+        deviceMake: at("/hardwareDetail/manufacturer")?.asText()
+        deviceModel: at("/hardwareDetail/model")?.asText()
+        deviceOnline: at("/healthStatus")?.asText()?.toLowerCase().equals("healthy") || at("/healthStatus")?.asText()?.toLowerCase().equals("nonurgent") #unknown, offline, critical, nonUrgent, healthy, unknownFutureValue.
+      properties:
+        UniqueID: at("/hardwareDetail/uniqueId")
+        Notes: at("/notes")
+        CompanyAssetTag: at("/companyAssetTag")
+        ActivityState: at("/activityState")
+        HealthStatus: at("/healthStatus")
+        Created: at("/createdDateTime")
+        CreatedBy: at("/createdBy")
+        LastModified: at("/lastModifiedDateTime")
+        LastModifiedBy: at("/lastModifiedBy")
+        CurrentUser#ID: at("/currentUser/id")
+        CurrentUser#DisplayName: at("/currentUser/displayName")
+        CurrentUser#UserIdentityType: at("/currentUser/userIdentityType")
+        Restart: "Restart"
+        RunDiagnostics: "RunDiagnostics"
+      control:
+        Restart:
+          type: Button
+          gracePeriod: 0
+          label: Restart
+          labelPressed: Restart
+        RunDiagnostics:
+          type: Button
+          gracePeriod: 0
+          label: Run
+          labelPressed: Run
+  - model:
+      name: DeviceActivity
+      vendor: Microsoft
+      filter: at("/@odata.context")?.asText().contains("/activity")
+      properties:
+        RoomCamera#ID: at("/activePeripherals/roomCamera/id")
+        RoomCamera#DisplayName: at("/activePeripherals/roomCamera/displayName")
+        RoomCamera#VendorID: at("/activePeripherals/roomCamera/vendorId")
+        RoomCamera#ProductID: at("/activePeripherals/roomCamera/productId")
+        #
+        ContentCamera#ID: at("/activePeripherals/contentCamera/id")
+        ContentCamera#DisplayName: at("/activePeripherals/contentCamera/displayName")
+        ContentCamera#VendorID: at("/activePeripherals/contentCamera/vendorId")
+        ContentCamera#ProductID: at("/activePeripherals/contentCamera/productId")
+        #
+        Speaker#ID: at("/activePeripherals/speaker/id")
+        Speaker#DisplayName: at("/activePeripherals/speaker/displayName")
+        Speaker#VendorID: at("/activePeripherals/speaker/vendorId")
+        Speaker#ProductID: at("/activePeripherals/speaker/productId")
+        #
+        CommunicationSpeaker#ID: at("/activePeripherals/communicationSpeaker/id")
+        CommunicationSpeaker#DisplayName: at("/activePeripherals/communicationSpeaker/displayName")
+        CommunicationSpeaker#VendorID: at("/activePeripherals/communicationSpeaker/vendorId")
+        CommunicationSpeaker#ProductID: at("/activePeripherals/communicationSpeaker/productId")
+        #
+        Microphone#ID: at("/activePeripherals/microphone/id")
+        Microphone#DisplayName: at("/activePeripherals/microphone/displayName")
+        Microphone#VendorID: at("/activePeripherals/microphone/vendorId")
+        Microphone#ProductID: at("/activePeripherals/microphone/productId")
+  - model:
+      name: DeviceConfiguration
+      vendor: Microsoft
+      filter: at("/@odata.context")?.asText().contains("/configuration")
+      properties:
+        SoftwareConfiguration#AdminAgentVersion: at("/softwareVersions/adminAgentSoftwareVersion")
+        SoftwareConfiguration#OperatingSystemVersion: at("/softwareVersions/operatingSystemSoftwareVersion")
+        SoftwareConfiguration#TeamsClientVersion: at("/softwareVersions/teamsClientSoftwareVersion")
+        SoftwareConfiguration#FirmwareVersion: at("/softwareVersions/firmwareSoftwareVersion")
+        SoftwareConfiguration#PartnerAgentVersion: at("/softwareVersions/partnerAgentSoftwareVersion")
+        #
+        DisplayConfiguration#DisplayCount: at("/displayConfiguration/displayCount")
+        DisplayConfiguration#DualDisplayModeEnabled: at("/displayConfiguration/isDualDisplayModeEnabled")
+        DisplayConfiguration#ContentDuplicationAllowed: at("/displayConfiguration/isContentDuplicationAllowed")
+        DisplayConfiguration#InBuiltDisplayScreenConfig: at("/displayConfiguration/inBuiltDisplayScreenConfiguration")
+        #DisplayConfiguration#ConfiguredDisplays:
+        #
+        #CameraConfiguration#ContentCameraOptional: at("/cameraConfiguration/contentCameraConfiguration/isContentCameraOptional")
+        CameraConfiguration#ContentEnhancementEnabled: at("/cameraConfiguration/contentCameraConfiguration/isContentEnhancementEnabled")
+        CameraConfiguration#ContentCameraInverted: at("/cameraConfiguration/contentCameraConfiguration/isContentCameraInverted")
+        #
+        #SpeakerConfiguration#SpeakerOptional: at("/speakerConfiguration/isSpeakerOptional")
+        #SpeakerConfiguration#CommunicationSpeakerOptional: at("/speakerConfiguration/isCommunicationSpeakerOptional")
+        #
+        #MicrophoneConfiguration#MicrophoneOptional: at("/microphoneConfiguration/isMicrophoneOptional")
+        #
+        TeamsClientConfiguration#AutoScreenShareEnabled: at("/teamsClientConfiguration/featuresConfiguration/isAutoScreenShareEnabled")
+        TeamsClientConfiguration#HideMeetingNamesEnabled: at("/teamsClientConfiguration/featuresConfiguration/isHideMeetingNamesEnabled")
+        TeamsClientConfiguration#BluetoothBeaconingEnabled: at("/teamsClientConfiguration/featuresConfiguration/isBluetoothBeaconingEnabled")
+        TeamsClientConfiguration#SendLogsAndFeedbackEnabled: at("/teamsClientConfiguration/featuresConfiguration/isSendLogsAndFeedbackEnabled")
+        TeamsClientConfiguration#EmailToSendLogsAndFeedback: at("/teamsClientConfiguration/featuresConfiguration/emailToSendLogsAndFeedback")
+        #
+        TeamsClientConfiguration#SupportedClient: at("/teamsClientConfiguration/accountConfiguration/supportedClient")
+        TeamsClientConfiguration#OnPremCalendarSyncSMTPAddress: at("/teamsClientConfiguration/accountConfiguration/onPremisesCalendarSyncConfiguration/smtpAddress")
+        TeamsClientConfiguration#OnPremCalendarSyncDomainUserName: at("/teamsClientConfiguration/accountConfiguration/onPremisesCalendarSyncConfiguration/domainUserName")
+        TeamsClientConfiguration#OnPremCalendarSyncDomain: at("/teamsClientConfiguration/accountConfiguration/onPremisesCalendarSyncConfiguration/domain")
+        #
+        HardwareConfiguration#ProcessorModel: at("/hardwareConfiguration/processorModel")
+  - model:
+      name: DeviceHealth
+      vendor: Microsoft
+      filter: at("/@odata.context")?.asText().contains("/health")
+      properties:
+        Connection#Status: at("/connection/connectionStatus")
+        Connection#LastModified: at("/connection/lastModifiedDateTime")
+        #
+        LoginStatus#ExchangeConnectionStatus: at("/loginStatus/exchangeConnection/connectionStatus")
+        LoginStatus#ExchangeConnectionLastModified: at("/loginStatus/exchangeConnection/lastModifiedDateTime")
+        LoginStatus#TeamsConnectionStatus: at("/loginStatus/teamsConnection/connectionStatus")
+        LoginStatus#TeamsConnectionLastModified: at("/loginStatus/teamsConnection/lastModifiedDateTime")
+        LoginStatus#SkypeConnectionStatus: at("/loginStatus/skypeConnection/connectionStatus")
+        LoginStatus#SkypeConnectionLastModified: at("/loginStatus/skypeConnection/lastModifiedDateTime")
+        #
+        Peripherals#RoomCameraOptional: at("/peripheralsHealth/roomCameraHealth/isOptional")
+        Peripherals#RoomCameraConnectionStatus: at("/peripheralsHealth/roomCameraHealth/connection/connectionStatus")
+        Peripherals#RoomCameraConnectionLastModified: at("/peripheralsHealth/roomCameraHealth/connection/lastModifiedDateTime")
+        #
+        Peripherals#ContentCameraOptional: at("/peripheralsHealth/contentCameraHealth/isOptional")
+        Peripherals#ContentCameraConnectionStatus: at("/peripheralsHealth/contentCameraHealth/connection/connectionStatus")
+        Peripherals#ContentCameraConnectionLastModified: at("/peripheralsHealth/contentCameraHealth/connection/lastModifiedDateTime")
+        #
+        Peripherals#SpeakerOptional: at("/peripheralsHealth/speakerHealth/isOptional")
+        Peripherals#SpeakerConnectionStatus: at("/peripheralsHealth/speakerHealth/connection/connectionStatus")
+        Peripherals#SpeakerConnectionLastModified: at("/peripheralsHealth/speakerHealth/connection/lastModifiedDateTime")
+        #
+        Peripherals#CommunicationSpeakerOptional: at("/peripheralsHealth/communicationSpeakerHealth/isOptional")
+        Peripherals#CommunicationSpeakerConnectionStatus: at("/peripheralsHealth/communicationSpeakerHealth/connection/connectionStatus")
+        Peripherals#CommunicationSpeakerConnectionLastModified: at("/peripheralsHealth/communicationSpeakerHealth/connection/lastModifiedDateTime")
+        #
+        Peripherals#MicrophoneOptional: at("/peripheralsHealth/microphoneHealth/isOptional")
+        Peripherals#MicrophoneConnectionStatus: at("/peripheralsHealth/microphoneHealth/connection/connectionStatus")
+        Peripherals#MicrophoneConnectionLastModified: at("/peripheralsHealth/microphoneHealth/connection/lastModifiedDateTime")
+        # Display health collection #
+        # Display health collection #
+        #
+        SoftwareHealth#CompanyPortalSoftwareFreshness: at("/softwareUpdateHealth/companyPortalSoftwareUpdateStatus/softwareFreshness")
+        SoftwareHealth#CompanyPortalCurentVersion: at("/softwareUpdateHealth/companyPortalSoftwareUpdateStatus/currentVersion")
+        SoftwareHealth#CompanyPortalAvailableVersion: at("/softwareUpdateHealth/companyPortalSoftwareUpdateStatus/availableVersion")
+        #
+        SoftwareHealth#FirmwareSoftwareFreshness: at("/softwareUpdateHealth/firmwareSoftwareUpdateStatus/softwareFreshness")
+        SoftwareHealth#FirmwareCurentVersion: at("/softwareUpdateHealth/firmwareSoftwareUpdateStatus/currentVersion")
+        SoftwareHealth#FirmwareAvailableVersion: at("/softwareUpdateHealth/firmwareSoftwareUpdateStatus/availableVersion")
+        #
+        SoftwareHealth#PartnerAgentSoftwareFreshness: at("/softwareUpdateHealth/partnerAgentSoftwareUpdateStatus/softwareFreshness")
+        SoftwareHealth#PartnerAgentCurentVersion: at("/softwareUpdateHealth/partnerAgentSoftwareUpdateStatus/currentVersion")
+        SoftwareHealth#PartnerAgentAvailableVersion: at("/softwareUpdateHealth/partnerAgentSoftwareUpdateStatus/availableVersion")
+        #
+        SoftwareHealth#AdminAgentSoftwareFreshness: at("/softwareUpdateHealth/adminAgentSoftwareUpdateStatus/softwareFreshness")
+        SoftwareHealth#AdminAgentCurentVersion: at("/softwareUpdateHealth/adminAgentSoftwareUpdateStatus/currentVersion")
+        SoftwareHealth#AdminAgentAvailableVersion: at("/softwareUpdateHealth/adminAgentSoftwareUpdateStatus/availableVersion")
+        #
+        SoftwareHealth#TeamsClientSoftwareFreshness: at("/softwareUpdateHealth/teamsClientSoftwareUpdateStatus/softwareFreshness")
+        SoftwareHealth#TeamsClientCurentVersion: at("/softwareUpdateHealth/teamsClientSoftwareUpdateStatus/currentVersion")
+        SoftwareHealth#TeamsClientAvailableVersion: at("/softwareUpdateHealth/teamsClientSoftwareUpdateStatus/availableVersion")
+        #
+        SoftwareHealth#OperatingSystemSoftwareFreshness: at("/softwareUpdateHealth/operatingSystemSoftwareUpdateStatus/softwareFreshness")
+        SoftwareHealth#OperatingSystemCurentVersion: at("/softwareUpdateHealth/operatingSystemSoftwareUpdateStatus/currentVersion")
+        SoftwareHealth#OperatingSystemAvailableVersion: at("/softwareUpdateHealth/operatingSystemSoftwareUpdateStatus/availableVersion")
+        #
+        HardwareHealth#ComputeOptional: at("/hardwareHealth/computeHealth/isOptional")
+        HardwareHealth#ComputeConnectionStatus: at("/hardwareHealth/computeHealth/connection/connectionStatus")
+        HardwareHealth#ComputeConnectionLastModified: at("/hardwareHealth/computeHealth/connection/lastModifiedDateTime")
+        #
+        HardwareHealth#HDMIIngestOptional: at("/hardwareHealth/hdmiIngestHealth/isOptional")
+        HardwareHealth#HDMIIngestConnectionStatus: at("/hardwareHealth/hdmiIngestHealth/connection/connectionStatus")
+        HardwareHealth#HDMIIngestConnectionLastModified: at("/hardwareHealth/hdmiIngestHealth/connection/lastModifiedDateTime")
