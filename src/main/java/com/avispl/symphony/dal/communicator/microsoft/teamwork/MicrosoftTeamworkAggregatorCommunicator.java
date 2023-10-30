@@ -398,6 +398,16 @@ public class MicrosoftTeamworkAggregatorCommunicator extends RestCommunicator im
     }
 
     @Override
+    public String doPost(String uri, String data) throws Exception {
+        try {
+            return super.doPost(uri, data);
+        } catch (FailedLoginException fe) {
+            authenticate();
+            return super.doPost(uri, data);
+        }
+    }
+
+    @Override
     protected <Response> Response doGet(String uri, Class<Response> responseClass) throws Exception {
         try {
             return super.doGet(uri, responseClass);
