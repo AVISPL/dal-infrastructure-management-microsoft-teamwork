@@ -11,7 +11,7 @@ models:
         deviceName: at("/deviceType")?.asText() + " " + at("/hardwareDetail/serialNumber")?.asText()
         deviceMake: at("/hardwareDetail/manufacturer")?.asText()
         deviceModel: at("/hardwareDetail/model")?.asText()
-        deviceOnline: at("/healthStatus")?.asText()?.toLowerCase().equals("healthy") || at("/healthStatus")?.asText()?.toLowerCase().equals("nonurgent") #unknown, offline, critical, nonUrgent, healthy, unknownFutureValue.
+        deviceOnline: at("/healthStatus")?.asText()?.toLowerCase().equals("offline") == false && at("/healthStatus")?.asText()?.toLowerCase().equals("unknown") == false #unknown, offline, critical, nonUrgent, healthy, unknownFutureValue.
       properties:
         UniqueID: at("/hardwareDetail/uniqueId")
         Notes: at("/notes")
