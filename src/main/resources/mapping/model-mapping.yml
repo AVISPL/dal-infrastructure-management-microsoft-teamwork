@@ -21,7 +21,7 @@ models:
         Created: at("/createdDateTime")
         CreatedBy: at("/createdBy")
         LastModified: at("/lastModifiedDateTime")
-        LastModifiedBy: at("/lastModifiedBy")
+        LastModifiedBy: at("/lastModifiedBy/user/displayName")
         CurrentUser#ID: at("/currentUser/id")
         CurrentUser#DisplayName: at("/currentUser/displayName")
         CurrentUser#UserIdentityType: at("/currentUser/userIdentityType")
