@@ -67,6 +67,7 @@ public class MicrosoftTeamworkAggregatorCommunicator extends RestCommunicator im
         public void run() {
             mainloop:
             while (inProgress) {
+                long startCycle = System.currentTimeMillis();
                 try {
                     TimeUnit.MILLISECONDS.sleep(500);
                 } catch (InterruptedException e) {
@@ -153,6 +154,8 @@ public class MicrosoftTeamworkAggregatorCommunicator extends RestCommunicator im
                 // launches devices detailed statistics collection
                 nextDevicesCollectionIterationTimestamp = System.currentTimeMillis() + 30000;
 
+                lastMonitoringCycleDuration = (System.currentTimeMillis() - startCycle)/1000;
+
                 if (logger.isDebugEnabled()) {
                     logger.debug("Finished collecting devices statistics cycle at " + new Date());
                 }
@@ -172,6 +175,11 @@ public class MicrosoftTeamworkAggregatorCommunicator extends RestCommunicator im
     boolean hasApiError = false;
 
     private PingMode pingMode = PingMode.ICMP;
+
+    /**
+     * How much time last monitoring cycle took to finish
+     * */
+    private Long lastMonitoringCycleDuration;
 
     /**
      * Client ID used for oauth access token generation. (login)
@@ -569,12 +577,19 @@ public class MicrosoftTeamworkAggregatorCommunicator extends RestCommunicator im
         }
         Map<String, String> statistics = new HashMap<>();
         ExtendedStatistics extendedStatistics = new ExtendedStatistics();
+        Map<String, String> dynamicStatistics = new HashMap<>();
+
+        dynamicStatistics.put(Constant.PropertyNames.TOTAL_DEVICES, String.valueOf(aggregatedDevices.size()));
+        if (lastMonitoringCycleDuration != null) {
+            dynamicStatistics.put(Constant.PropertyNames.LAST_CYCLE_DURATION, String.valueOf(lastMonitoringCycleDuration));
+        }
 
         statistics.put("AdapterVersion", adapterProperties.getProperty("aggregator.version"));
         statistics.put("AdapterBuildDate", adapterProperties.getProperty("aggregator.build.date"));
         statistics.put("AdapterUptime", normalizeUptime((System.currentTimeMillis() - adapterInitializationTimestamp) / 1000));
 
         extendedStatistics.setStatistics(statistics);
+        extendedStatistics.setDynamicStatistics(dynamicStatistics);
         return Collections.singletonList(extendedStatistics);
     }
 
