@@ -33,6 +33,8 @@ import java.net.ConnectException;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -810,6 +812,7 @@ public class MicrosoftTeamworkAggregatorCommunicator extends RestCommunicator im
         }
 
         Map<String, String> properties = aggregatedDevice.getProperties();
+        properties.put("LastUpdated", generateCurrentDateISO8601());
         try {
             if (logger.isDebugEnabled()) {
                 logger.debug("Requesting device activity details for device with id: " + deviceId);
@@ -836,9 +839,31 @@ public class MicrosoftTeamworkAggregatorCommunicator extends RestCommunicator im
             }
             JsonNode deviceHealth = doGet(String.format(RETRIEVE_DEVICES_HEALTH_URL, deviceId), JsonNode.class);
             aggregatedDeviceProcessor.applyProperties(properties, deviceHealth, "DeviceHealth");
+            setOnlineStatus(aggregatedDevice, properties.get(Constant.PropertyNames.HEALTH_STATUS));
         } catch (Exception ex) {
             logger.error("Unable to retrieve device health details for device with id: " + deviceId);
         }
+    }
+
+    /**
+     * Set device's online status based on HealthStatus, reported by teamwork API.
+     *
+     * @param device to set health status for
+     * @param healthStatus string value of a health status, with possible values being listed as
+     *                     unknown, offline, critical, nonUrgent, healthy, unknownFutureValue
+     * */
+    private void setOnlineStatus(AggregatedDevice device, String healthStatus) {
+        device.setDeviceOnline(!healthStatus.equalsIgnoreCase("offline") && !healthStatus.equalsIgnoreCase("unknown"));
+    }
+
+    /**
+     *
+     * */
+    private String generateCurrentDateISO8601() {
+        Date currentDate = new Date();
+        ZonedDateTime zonedDateTime = currentDate.toInstant().atZone(java.time.ZoneId.of("UTC"));
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_INSTANT;
+        return formatter.format(zonedDateTime);
     }
 
     /**
