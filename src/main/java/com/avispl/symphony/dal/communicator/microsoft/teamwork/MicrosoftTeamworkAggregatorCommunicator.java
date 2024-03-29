@@ -857,7 +857,9 @@ public class MicrosoftTeamworkAggregatorCommunicator extends RestCommunicator im
     }
 
     /**
+     * Generate current date in ISO8601 String format
      *
+     * @return String value of ISO8601 date
      * */
     private String generateCurrentDateISO8601() {
         Date currentDate = new Date();
