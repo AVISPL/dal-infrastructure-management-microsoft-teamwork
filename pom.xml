@@ -6,7 +6,7 @@
 
     <groupId>com.avispl.symphony.dal.communicator.microsoft.teamwork</groupId>
     <artifactId>symphony-dal-infrastructure-management-microsoft-teamwork</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
     <properties>
         <symphonyApiVersion>RELEASE</symphonyApiVersion>
         <timestamp>${maven.build.timestamp}</timestamp>
@@ -227,7 +227,7 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.5.13</version>
+            <version>4.5.14</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

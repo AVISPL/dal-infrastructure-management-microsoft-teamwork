@@ -61,5 +61,6 @@ public interface Constant {
     interface PropertyNames {
         String TOTAL_DEVICES = "MonitoredDevicesTotal";
         String LAST_CYCLE_DURATION = "LastMonitoringCycleDuration(s)";
+        String HEALTH_STATUS = "HealthStatus";
     }
 }
