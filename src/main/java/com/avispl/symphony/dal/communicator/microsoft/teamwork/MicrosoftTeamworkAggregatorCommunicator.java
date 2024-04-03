@@ -15,6 +15,7 @@ import com.avispl.symphony.dal.aggregator.parser.AggregatedDeviceProcessor;
 import com.avispl.symphony.dal.aggregator.parser.PropertiesMapping;
 import com.avispl.symphony.dal.aggregator.parser.PropertiesMappingParser;
 import com.avispl.symphony.dal.communicator.RestCommunicator;
+import com.avispl.symphony.dal.communicator.microsoft.teamwork.data.PingMode;
 import com.avispl.symphony.dal.util.StringUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.HttpHeaders;
@@ -28,6 +29,12 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
+import java.net.ConnectException;
+import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -62,6 +69,7 @@ public class MicrosoftTeamworkAggregatorCommunicator extends RestCommunicator im
         public void run() {
             mainloop:
             while (inProgress) {
+                long startCycle = System.currentTimeMillis();
                 try {
                     TimeUnit.MILLISECONDS.sleep(500);
                 } catch (InterruptedException e) {
@@ -75,6 +83,7 @@ public class MicrosoftTeamworkAggregatorCommunicator extends RestCommunicator im
                 // next line will determine whether MS Graph API monitoring was paused
                 updateAggregatorStatus();
                 if (devicePaused) {
+                    System.out.println("DEVICE IS PAUSED");
                     continue mainloop;
                 }
 
@@ -147,6 +156,8 @@ public class MicrosoftTeamworkAggregatorCommunicator extends RestCommunicator im
                 // launches devices detailed statistics collection
                 nextDevicesCollectionIterationTimestamp = System.currentTimeMillis() + 30000;
 
+                lastMonitoringCycleDuration = (System.currentTimeMillis() - startCycle)/1000;
+
                 if (logger.isDebugEnabled()) {
                     logger.debug("Finished collecting devices statistics cycle at " + new Date());
                 }
@@ -164,6 +175,13 @@ public class MicrosoftTeamworkAggregatorCommunicator extends RestCommunicator im
 
     boolean hasAuthError = false;
     boolean hasApiError = false;
+
+    private PingMode pingMode = PingMode.ICMP;
+
+    /**
+     * How much time last monitoring cycle took to finish
+     * */
+    private Long lastMonitoringCycleDuration;
 
     /**
      * Client ID used for oauth access token generation. (login)
@@ -299,6 +317,24 @@ public class MicrosoftTeamworkAggregatorCommunicator extends RestCommunicator im
     }
 
     /**
+     * Retrieves {@link #pingMode}
+     *
+     * @return value of {@link #pingMode}
+     */
+    public String getPingMode() {
+        return pingMode.name();
+    }
+
+    /**
+     * Sets {@link #pingMode} value
+     *
+     * @param pingMode new value of {@link #pingMode}
+     */
+    public void setPingMode(String pingMode) {
+        this.pingMode = PingMode.ofString(pingMode);
+    }
+
+    /**
      * Retrieves {@link #maxDeviceLimit}
      *
      * @return value of {@link #maxDeviceLimit}
@@ -379,6 +415,53 @@ public class MicrosoftTeamworkAggregatorCommunicator extends RestCommunicator im
         adapterProperties = new Properties();
         adapterProperties.load(getClass().getResourceAsStream("/version.properties"));
     }
+
+
+    @Override
+    public int ping() throws Exception {
+        if (pingMode == PingMode.ICMP) {
+            return super.ping();
+        } else if (pingMode == PingMode.TCP) {
+            if (isInitialized()) {
+                long pingResultTotal = 0L;
+
+                for (int i = 0; i < this.getPingAttempts(); i++) {
+                    long startTime = System.currentTimeMillis();
+
+                    try (Socket puSocketConnection = new Socket(this.host, this.getPort())) {
+                        puSocketConnection.setSoTimeout(this.getPingTimeout());
+                        if (puSocketConnection.isConnected()) {
+                            long pingResult = System.currentTimeMillis() - startTime;
+                            pingResultTotal += pingResult;
+                            if (this.logger.isTraceEnabled()) {
+                                this.logger.trace(String.format("PING OK: Attempt #%s to connect to %s on port %s succeeded in %s ms", i + 1, host, this.getPort(), pingResult));
+                            }
+                        } else {
+                            if (this.logger.isDebugEnabled()) {
+                                logger.debug(String.format("PING DISCONNECTED: Connection to %s did not succeed within the timeout period of %sms", host, this.getPingTimeout()));
+                            }
+                            return this.getPingTimeout();
+                        }
+                    } catch (SocketTimeoutException | ConnectException tex) {
+                        throw new SocketTimeoutException("Socket connection timed out");
+                    } catch (UnknownHostException tex) {
+                        throw new SocketTimeoutException("Socket connection timed out" + tex.getMessage());
+                    } catch (Exception e) {
+                        if (this.logger.isWarnEnabled()) {
+                            this.logger.warn(String.format("PING TIMEOUT: Connection to %s did not succeed, UNKNOWN ERROR %s: ", host, e.getMessage()));
+                        }
+                        return this.getPingTimeout();
+                    }
+                }
+                return Math.max(1, Math.toIntExact(pingResultTotal / this.getPingAttempts()));
+            } else {
+                throw new IllegalStateException("Cannot use device class without calling init() first");
+            }
+        } else {
+            throw new IllegalArgumentException("Unknown PING Mode: " + pingMode);
+        }
+    }
+
 
     @Override
     protected void authenticate() throws Exception {
@@ -496,12 +579,19 @@ public class MicrosoftTeamworkAggregatorCommunicator extends RestCommunicator im
         }
         Map<String, String> statistics = new HashMap<>();
         ExtendedStatistics extendedStatistics = new ExtendedStatistics();
+        Map<String, String> dynamicStatistics = new HashMap<>();
+
+        dynamicStatistics.put(Constant.PropertyNames.TOTAL_DEVICES, String.valueOf(aggregatedDevices.size()));
+        if (lastMonitoringCycleDuration != null) {
+            dynamicStatistics.put(Constant.PropertyNames.LAST_CYCLE_DURATION, String.valueOf(lastMonitoringCycleDuration));
+        }
 
         statistics.put("AdapterVersion", adapterProperties.getProperty("aggregator.version"));
         statistics.put("AdapterBuildDate", adapterProperties.getProperty("aggregator.build.date"));
         statistics.put("AdapterUptime", normalizeUptime((System.currentTimeMillis() - adapterInitializationTimestamp) / 1000));
 
         extendedStatistics.setStatistics(statistics);
+        extendedStatistics.setDynamicStatistics(dynamicStatistics);
         return Collections.singletonList(extendedStatistics);
     }
 
@@ -722,6 +812,7 @@ public class MicrosoftTeamworkAggregatorCommunicator extends RestCommunicator im
         }
 
         Map<String, String> properties = aggregatedDevice.getProperties();
+        properties.put("LastUpdated", generateCurrentDateISO8601());
         try {
             if (logger.isDebugEnabled()) {
                 logger.debug("Requesting device activity details for device with id: " + deviceId);
@@ -739,7 +830,7 @@ public class MicrosoftTeamworkAggregatorCommunicator extends RestCommunicator im
             JsonNode deviceConfig = doGet(String.format(RETRIEVE_DEVICES_CONFIGURATION_URL, deviceId), JsonNode.class);
             aggregatedDeviceProcessor.applyProperties(properties, deviceConfig, "DeviceConfiguration");
         } catch (Exception ex) {
-            logger.error("Unable to retrieve device configuration details for device with id: " + deviceId);
+            logger.error("Unable to retrieve device configuration details for device with id: " + deviceId, ex);
         }
 
         try {
@@ -748,9 +839,33 @@ public class MicrosoftTeamworkAggregatorCommunicator extends RestCommunicator im
             }
             JsonNode deviceHealth = doGet(String.format(RETRIEVE_DEVICES_HEALTH_URL, deviceId), JsonNode.class);
             aggregatedDeviceProcessor.applyProperties(properties, deviceHealth, "DeviceHealth");
+            setOnlineStatus(aggregatedDevice, properties.get(Constant.PropertyNames.HEALTH_STATUS));
         } catch (Exception ex) {
             logger.error("Unable to retrieve device health details for device with id: " + deviceId);
         }
+    }
+
+    /**
+     * Set device's online status based on HealthStatus, reported by teamwork API.
+     *
+     * @param device to set health status for
+     * @param healthStatus string value of a health status, with possible values being listed as
+     *                     unknown, offline, critical, nonUrgent, healthy, unknownFutureValue
+     * */
+    private void setOnlineStatus(AggregatedDevice device, String healthStatus) {
+        device.setDeviceOnline(!healthStatus.equalsIgnoreCase("offline") && !healthStatus.equalsIgnoreCase("unknown"));
+    }
+
+    /**
+     * Generate current date in ISO8601 String format
+     *
+     * @return String value of ISO8601 date
+     * */
+    private String generateCurrentDateISO8601() {
+        Date currentDate = new Date();
+        ZonedDateTime zonedDateTime = currentDate.toInstant().atZone(java.time.ZoneId.of("UTC"));
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_INSTANT;
+        return formatter.format(zonedDateTime);
     }
 
     /**

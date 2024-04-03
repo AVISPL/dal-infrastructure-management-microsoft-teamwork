@@ -52,4 +52,15 @@ public interface Constant {
     interface Util {
         String FILTER_PARAMETER = "'%s'";
     }
+
+    /**
+     * Property names constants
+     * @author Maksym Rossiitsev
+     * @since 0.1.0
+     * */
+    interface PropertyNames {
+        String TOTAL_DEVICES = "MonitoredDevicesTotal";
+        String LAST_CYCLE_DURATION = "LastMonitoringCycleDuration(s)";
+        String HEALTH_STATUS = "HealthStatus";
+    }
 }
